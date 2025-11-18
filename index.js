@@ -22,12 +22,66 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    const db = client.db("book-Shope-AppDB");
+    const db = client.db("storage-managementDB");
      const usersCollection = db.collection("users");
 
+ // ✅ Registration API
+app.post("/users", async (req, res) => {
+  const { uid, username, email, role } = req.body;
 
+  if (!uid || !username || !email) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
 
+  try {
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    const result = await usersCollection.insertOne({
+      uid,
+      username,
+      email,
+      role: role || "user",
+      createdAt: new Date(),
+    });
 
+    res.status(201).json(result); 
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+    
+    // Get all users (admin purpose)
+    app.get("/users", async (req, res) => {
+      const users = await usersCollection.find().toArray();
+      res.send(users);
+    });
+
+ // 🔹 Get all users (admin purpose)
+    app.get("/users", async (req, res) => {
+      try {
+        const users = await usersCollection.find().toArray();
+        res.json({ success: true, users });
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+      }
+    });
+
+    // 🔹 Get user by uid
+    app.get("/users/:uid", async (req, res) => {
+      const { uid } = req.params;
+      try {
+        const user = await usersCollection.findOne({ uid });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        res.json({ success: true, user });
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: "Server error" });
+      }
+    });
 
 
 
