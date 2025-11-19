@@ -274,7 +274,58 @@ app.delete("/delete/:type/:id", async (req, res) => {
   }
 });
 
+// Toggle favorite status
+app.patch("/:type/:id/favorite", async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { favorite, email } = req.body;
 
+    let collection;
+    switch (type) {
+      case "image": collection = imagesCollection; break;
+      case "pdf": collection = pdfsCollection; break;
+      case "note": collection = notesCollection; break;
+      case "folder": collection = foldersCollection; break;
+      default: return res.status(400).json({ message: "Invalid type" });
+    }
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id), email },
+      { $set: { favorite } }
+    );
+
+    if (result.matchedCount === 0)
+      return res.status(404).json({ message: "File not found or unauthorized" });
+
+    res.status(200).json({ message: "Favorite updated", favorite });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+/// Get all favorite items of a user
+app.get("/favorites/:email", async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const images = await imagesCollection.find({ email, favorite: true }).toArray();
+    const pdfs = await pdfsCollection.find({ email, favorite: true }).toArray();
+    const notes = await notesCollection.find({ email, favorite: true }).toArray();
+    const folders = await foldersCollection.find({ email, favorite: true }).toArray();
+
+    const favorites = [
+      ...images.map(i => ({ ...i, type: "image" })),
+      ...pdfs.map(p => ({ ...p, type: "pdf" })),
+      ...notes.map(n => ({ ...n, type: "note" })),
+      ...folders.map(f => ({ ...f, type: "folder" })),
+    ];
+
+    res.json(favorites);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
     // ================= TEST =================
