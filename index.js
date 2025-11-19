@@ -123,6 +123,83 @@ app.post("/upload/folder", async (req, res) => {
   }
 });
 
+// ================= GET FILES =================
+//  Fetch only current user files using email
+app.get("/images/:email", async (req, res) => {
+  const { email } = req.params;
+  const data = await imagesCollection.find({ email }).toArray();
+  res.json(data);
+});
+
+app.get("/pdfs/:email", async (req, res) => {
+  const { email } = req.params;
+  const data = await pdfsCollection.find({ email }).toArray();
+  res.json(data);
+});
+
+app.get("/notes/:email", async (req, res) => {
+  const { email } = req.params;
+  const data = await notesCollection.find({ email }).toArray();
+  res.json(data);
+});
+
+app.get("/folders/:email", async (req, res) => {
+  const { email } = req.params;
+  const data = await foldersCollection.find({ email }).toArray();
+  res.json(data);
+});
+
+
+
+
+
+// Images
+app.get("/images/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const data = await imagesCollection.find({ email }).toArray();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// PDF
+app.get("/pdfs/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const data = await pdfsCollection.find({ email }).toArray();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Notes
+app.get("/notes/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const data = await notesCollection.find({ email }).toArray();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Folders
+app.get("/folders/:email", async (req, res) => {
+  const { email } = req.params;
+  try {
+    const data = await foldersCollection.find({ email }).toArray();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+
 
     // ================= TEST =================
     app.get("/", (req, res) => {
