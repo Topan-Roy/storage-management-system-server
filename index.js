@@ -199,6 +199,39 @@ app.get("/folders/:email", async (req, res) => {
 
 
 
+// Rename route
+app.put("/rename/:type/:id", async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { newName } = req.body;
+    const email = req.body.email; 
+
+    let collection;
+    switch (type) {
+      case "image": collection = imagesCollection; break;
+      case "pdf": collection = pdfsCollection; break;
+      case "note": collection = notesCollection; break;
+      case "folder": collection = foldersCollection; break;
+      default: return res.status(400).json({ message: "Invalid type" });
+    }
+
+    const result = await collection.updateOne(
+      { _id: new ObjectId(id), email }, 
+      { $set: { name: newName } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "File not found or unauthorized" });
+    }
+
+    res.status(200).json({ message: "File renamed successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 
 
     // ================= TEST =================
