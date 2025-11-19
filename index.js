@@ -232,6 +232,49 @@ app.put("/rename/:type/:id", async (req, res) => {
 });
 
 
+// DELETE /delete/:type/:id
+app.delete("/delete/:type/:id", async (req, res) => {
+  try {
+    const { type, id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID" });
+    }
+
+    let collectionName;
+    switch (type) {
+      case "image":
+        collectionName = "images";
+        break;
+      case "pdf":
+        collectionName = "pdfs";
+        break;
+      case "note":
+        collectionName = "notes";
+        break;
+      case "folder":
+        collectionName = "folders";
+        break;
+      default:
+        return res.status(400).json({ message: "Invalid type" });
+    }
+
+    const collection = db.collection(collectionName);
+
+    const result = await collection.deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ message: "File not found" });
+    }
+
+    res.json({ message: "File deleted successfully" });
+  } catch (err) {
+    console.error("Delete error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 
 
     // ================= TEST =================
