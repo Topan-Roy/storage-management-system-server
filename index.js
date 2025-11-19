@@ -1,31 +1,28 @@
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 
 const app = express();
-
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
 const uri = process.env.MONGO_URI;
-
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  },
+  serverApi: { version: ServerApiVersion.v1, strict: true, deprecationErrors: true },
 });
 
 async function run() {
   try {
     const db = client.db("storage-managementDB");
-     const usersCollection = db.collection("users");
 
- // ✅ Registration API
+    const usersCollection = db.collection("users");
+    const imagesCollection = db.collection("images");
+    const pdfsCollection = db.collection("pdfs");
+    const notesCollection = db.collection("notes");
+    const foldersCollection = db.collection("folders");
+
+    // ✅ Registration API
 app.post("/users", async (req, res) => {
   const { uid, username, email, role } = req.body;
 
@@ -85,16 +82,52 @@ app.post("/users", async (req, res) => {
 
 
 
+   // ================= UPLOAD FILES =================
+app.post("/upload/image", async (req, res) => {
+  try {
+    const { name, size, uid, email } = req.body; // ✨ email add
+    const result = await imagesCollection.insertOne({ name, size, uid, email, date: new Date() });
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.post("/upload/pdf", async (req, res) => {
+  try {
+    const { name, size, uid, email } = req.body;
+    const result = await pdfsCollection.insertOne({ name, size, uid, email, date: new Date() });
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.post("/upload/note", async (req, res) => {
+  try {
+    const { name, size, uid, email } = req.body;
+    const result = await notesCollection.insertOne({ name, size, uid, email, date: new Date() });
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+app.post("/upload/folder", async (req, res) => {
+  try {
+    const { name, uid, email } = req.body;
+    const result = await foldersCollection.insertOne({ name, uid, email, date: new Date() });
+    res.status(201).json(result);
+  } catch (err) {
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 
-
-
-    // Test Route
+    // ================= TEST =================
     app.get("/", (req, res) => {
-      res.send("storage-management-system Server Running");
+      res.send("Storage-management-system Server Running");
     });
-
-    
 
     await client.db("admin").command({ ping: 1 });
     console.log("🚀 MongoDB Connected Successfully!");
@@ -104,7 +137,6 @@ app.post("/users", async (req, res) => {
 }
 run().catch(console.dir);
 
-// Start Server
 app.listen(process.env.PORT, () => {
   console.log(`🔥 Server Running on Port: ${process.env.PORT}`);
 });
