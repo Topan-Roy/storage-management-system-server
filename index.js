@@ -80,6 +80,31 @@ app.post("/users", async (req, res) => {
       }
     });
 
+// 🔹 Update username by uid
+app.put("/users/:uid", async (req, res) => {
+  const { uid } = req.params;
+  const { username } = req.body;
+
+  if (!username) {
+    return res.status(400).json({ success: false, message: "Username is required" });
+  }
+
+  try {
+    const result = await usersCollection.updateOne(
+      { uid },
+      { $set: { username } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, message: "Username updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
    // ================= UPLOAD FILES =================
@@ -326,6 +351,37 @@ app.get("/favorites/:email", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
+
+
+// Add this in your run() function after other routes
+
+app.get("/items/:email/:date", async (req, res) => {
+  const { email, date } = req.params; // date is YYYY-MM-DD
+  try {
+    const start = new Date(`${date}T00:00:00.000Z`);
+    const end = new Date(`${date}T23:59:59.999Z`);
+
+    const images = await imagesCollection.find({ email, date: { $gte: start, $lt: end } }).toArray();
+    const pdfs   = await pdfsCollection.find({ email, date: { $gte: start, $lt: end } }).toArray();
+    const notes  = await notesCollection.find({ email, date: { $gte: start, $lt: end } }).toArray();
+    const folders= await foldersCollection.find({ email, date: { $gte: start, $lt: end } }).toArray();
+
+    const allItems = [
+      ...images.map(i => ({ ...i, type: "image" })),
+      ...pdfs.map(p => ({ ...p, type: "pdf" })),
+      ...notes.map(n => ({ ...n, type: "note" })),
+      ...folders.map(f => ({ ...f, type: "folder" })),
+    ];
+
+    res.json(allItems);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
 
 
     // ================= TEST =================
