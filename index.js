@@ -105,6 +105,36 @@ app.put("/users/:uid", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
+// ================= DELETE USER (ACCOUNT DELETE) =================
+app.delete("/users/:email", async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    // Delete user
+    const userDelete = await usersCollection.deleteOne({ email });
+
+    // Delete all files of this user
+    const imagesDelete = await imagesCollection.deleteMany({ email });
+    const pdfsDelete = await pdfsCollection.deleteMany({ email });
+    const notesDelete = await notesCollection.deleteMany({ email });
+    const foldersDelete = await foldersCollection.deleteMany({ email });
+
+    res.json({
+      success: true,
+      message: "User and all related data deleted successfully",
+      deleted: {
+        user: userDelete.deletedCount,
+        images: imagesDelete.deletedCount,
+        pdfs: pdfsDelete.deletedCount,
+        notes: notesDelete.deletedCount,
+        folders: foldersDelete.deletedCount,
+      }
+    });
+  } catch (err) {
+    console.error("Delete User Error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 
    // ================= UPLOAD FILES =================
